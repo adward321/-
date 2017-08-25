@@ -1,0 +1,182 @@
+﻿<!doctype html>
+<html lang="en" ng-app="app" ng-controller="myc">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Template • TodoMVC</title>
+    <link rel="stylesheet" href="node_modules/todomvc-app-css/index.css">
+    <!-- CSS overrides - remove if you don't need it -->
+    <link rel="stylesheet" href="css/app.css">
+</head>
+
+<body>
+    <section class="todoapp">
+        <header class="header">
+            <h1>todos</h1>
+            <form ng-submit="addTask()">
+                <input class="new-todo" placeholder="What needs to be done?" autofocus ng-model="newContent">
+            </form>
+
+        </header>
+        <!-- This section should be hidden by default and shown when there are todos -->
+        <section class="main">
+            <input class="toggle-all" type="checkbox" ng-model='toggle' ng-change='toggleAll()'>
+            <label for="toggle-all">Mark all as complete</label>
+            <ul class="todo-list">
+                <!-- These are here just to show the structure of the list items -->
+                <!-- List items should get the class `editing` when editing and `completed` when marked as completed -->
+                <li ng-repeat="task in tasks | filter:condition track by $index" ng-class="{ 'completed':task.isCompleted, 'editing' : editingId == task.id }">
+                    <div class="view">
+                        <input class="toggle" type="checkbox" ng-model="task.isCompleted">
+                        <label ng-bind="task.content" ng-dblclick="edit(task.id)"></label>
+                        <button class="destroy" ng-click="del($index)"></button>
+                    </div>
+                    <form ng-submit="save()">
+                        <input class="edit " ng-model="task.content">
+                    </form>
+
+
+                </li>
+            </ul>
+        </section>
+        <!-- This footer should hidden by default and shown when there are todos -->
+        <footer class="footer ">
+            <!-- This should be `0 items left` by default -->
+            <span class="todo-count "><strong>{{leftNum}}</strong> item left</span>
+            <!-- Remove this if you don't implement routing -->
+            <ul class="filters ">
+                <li>
+                    <a href="#" ng-class="{'selected':selectedNum == 1}">All</a>
+                </li>
+                <li>
+                    <a href="#active" ng-class="{'selected':selectedNum == 2}">Active</a>
+                </li>
+                <li>
+                    <a href="#completed " ng-class="{'selected':selectedNum == 3}">Completed</a>
+                </li>
+            </ul>
+            <!-- Hidden if no completed items are left ↓ -->
+            <button class="clear-completed ">Clear completed</button>
+        </footer>
+    </section>
+    <footer class="info ">
+        <p>Double-click to edit a todo</p>
+        <!-- Remove the below line ↓ -->
+        <p>Template by <a href="http://sindresorhus.com ">Sindre Sorhus</a></p>
+        <!-- Change this out with your name and url ↓ -->
+        <p>Created by <a href="http://todomvc.com ">you</a></p>
+        <p>Part of <a href="http://todomvc.com ">TodoMVC</a></p>
+    </footer>
+    <!-- Scripts here. Don't remove ↓ -->
+
+    <script type="text/javascript" src="./assets/angular/angular.js"></script>
+    <script type="text/javascript">
+        // <!-- Scripts here. Don't remove ↓ -->
+        angular.module('app', [])
+            .controller('myc', ['$scope', '$location', function($scope, $location) {
+                //功能1：显示数据
+                $scope.tasks = [{
+                    id: 1,
+                    isCompleted: false,
+                    content: '老师我们饿了'
+                }, {
+                    id: 2,
+                    isCompleted: false,
+                    content: '同学们请坚持一下，很快'
+                }, {
+                    id: 3,
+                    isCompleted: false,
+                    content: '小博，老师呼唤你'
+                }];
+                //初始化输入栏
+                $scope.newContent = '';
+                //初始化存储当前所编辑id的标识
+                $scope.editingId = -1;
+                //全选或全不选
+                $scope.toggle = false;
+                //初始化过滤条件
+                $scope.condition = {};
+                //功能2：添加任务
+                $scope.addTask = function() {
+
+                    var content = $scope.newContent,
+                        maxId = 0;
+                    if (content === "") {
+                        return;
+                    }
+                    for (var i = $scope.tasks - 1; i >= 0; i--) {
+                        if (maxId < $scope.tasks[i].id) {
+                            maxId = $scope.tasks[i].id;
+                        }
+                    }
+                    //找到最大的数组id然后++
+                    maxId++;
+                    $scope.tasks.push({
+                        id: maxId,
+                        isCompleted: false,
+                        content: content
+                    });
+                    $scope.newContent = '';
+                }
+
+
+                //功能3：删除任务
+                $scope.del = function(index) {
+                        $scope.tasks.splice(index, 1);
+                    }
+                    //编辑completed editing的样式
+                $scope.edit = function(id) {
+                        $scope.editingId = id;
+                    }
+                    //编辑后的保存
+                $scope.save = function() {
+                        $scope.editingId = -1;
+                    }
+                    //功能6：全选全不选
+                $scope.toggleAll = function() {
+                        //遍历数组
+                        for (var i = $scope.tasks.length - 1; i >= 0; i--) {
+                            $scope.tasks[i].isCompleted = $scope.toggle;
+                        }
+                    }
+                    //功能7：点击改变路径
+                $scope.myLocation = $location;
+                $scope.$watch('myLocation.url()', function(newL, oldL) {
+                    console.log(newL);
+                    switch (newL) {
+                        case '/#active':
+                            $scope.condition = {
+                                isCompleted: false
+                            };
+                            $scope.selectedNum = 2;
+                            break;
+                        case '/#completed':
+                            $scope.condition = {
+                                isCompleted: true
+                            };
+                            $scope.selectedNum = 3;
+                            break;
+                        default:
+                            $scope.condition = {};
+                            $scope.selectedNum = 1;
+                    }
+                });
+                $scope.ledtNum = 0;
+                $scope.$watch('tasks', function(newL, oldL) {
+                    $scope.leftNum = 0;
+                    //功能9：监视数组剩余任务数的统计
+                    for (var i = $scope.tasks.length - 1; i >= 0; i--) {
+                        if (!$scope.tasks[i].isCompleted) $scope.leftNum++;
+
+                    }
+                }, true);
+                //第三个参数是深度监视，会监视对象元素的属性
+            }])
+    </script>
+
+
+
+</body>
+
+</html>
